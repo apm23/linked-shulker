@@ -14,13 +14,29 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
 
 public final class LinkedShulkerBlock extends BaseEntityBlock {
-    public LinkedShulkerBlock(Properties properties) { super(properties); }
+    public static final int MAX_OPEN_FRAME = 7;
+    public static final IntegerProperty OPEN_FRAME = IntegerProperty.create("open", 0, MAX_OPEN_FRAME);
+
+    public LinkedShulkerBlock(Properties properties) {
+        super(properties);
+        registerDefaultState(stateDefinition.any().setValue(OPEN_FRAME, 0));
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(OPEN_FRAME);
+    }
 
     @Override
     protected MapCodec<? extends BaseEntityBlock> codec() { return simpleCodec(LinkedShulkerBlock::new); }
@@ -28,6 +44,11 @@ public final class LinkedShulkerBlock extends BaseEntityBlock {
     @Override
     public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new LinkedShulkerBlockEntity(pos, state);
+    }
+
+    @Override
+    public <T extends BlockEntity> @Nullable BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        return createTickerHelper(type, ModBlockEntities.LINKED_SHULKER, LinkedShulkerBlockEntity::serverTick);
     }
 
     @Override
