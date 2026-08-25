@@ -80,6 +80,14 @@ public final class LinkedShulkerBlockEntity extends BlockEntity implements Conta
     @Override public boolean stillValid(Player player) { return Container.stillValidBlockEntity(this, player); }
     @Override public void clearContent() { items().clear(); changed(); }
 
+    // Important: this container points at shared channel storage. The vanilla
+    // BlockEntity removal hook would otherwise treat it like a normal local
+    // container and drop channel contents when any linked block is removed.
+    @Override
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        // Intentionally empty: shared channel contents remain in SavedData.
+    }
+
     @Override
     public Component getDisplayName() {
         return Component.literal("Linked Shulker [" + channelLabel + "]");
