@@ -15,6 +15,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
@@ -24,6 +25,9 @@ public final class LinkedShulkerBlockEntity extends BlockEntity implements Conta
     private String channel = "default";
     private String channelLabel = "default";
     private final NonNullList<ItemStack> fallback = NonNullList.withSize(ChannelStorageData.SIZE, ItemStack.EMPTY);
+    private int viewers = 0;
+    private int animationFrame = 0;
+    private int animationDelay = 0;
 
     public LinkedShulkerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.LINKED_SHULKER, pos, state);
@@ -79,6 +83,28 @@ public final class LinkedShulkerBlockEntity extends BlockEntity implements Conta
 
     @Override public boolean stillValid(Player player) { return Container.stillValidBlockEntity(this, player); }
     @Override public void clearContent() { items().clear(); changed(); }
+
+    @Override
+    public void startOpen(Player player) {
+        if (!player.isSpectator()) viewers++;
+    }
+
+    @Override
+    public void stopOpen(Player player) {
+        if (!player.isSpectator()) viewers = Math.max(0, viewers - 1);
+    }
+
+    public static void serverTick(Level level, BlockPos pos, BlockState state, LinkedShulkerBlockEntity be) {
+        if (level.isClientSide()) return;
+        int target = be.viewers > 0 ? LinkedShulkerBlock.MAX_OPEN_FRAME : 0;
+        if (be.animationFrame == target) return;
+        if (++be.animationDelay < 1) return;
+        be.animationDelay = 0;
+        be.animationFrame += be.animationFrame < target ? 1 : -1;
+        if (state.hasProperty(LinkedShulkerBlock.OPEN_FRAME)) {
+            level.setBlock(pos, state.setValue(LinkedShulkerBlock.OPEN_FRAME, be.animationFrame), 3);
+        }
+    }
 
     // Important: this container points at shared channel storage. The vanilla
     // BlockEntity removal hook would otherwise treat it like a normal local
