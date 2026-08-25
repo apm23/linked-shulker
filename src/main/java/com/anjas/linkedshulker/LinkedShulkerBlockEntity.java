@@ -9,6 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.ContainerUser;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -27,7 +28,6 @@ public final class LinkedShulkerBlockEntity extends BlockEntity implements Conta
     private final NonNullList<ItemStack> fallback = NonNullList.withSize(ChannelStorageData.SIZE, ItemStack.EMPTY);
     private int viewers = 0;
     private int animationFrame = 0;
-    private int animationDelay = 0;
 
     public LinkedShulkerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.LINKED_SHULKER, pos, state);
@@ -85,33 +85,28 @@ public final class LinkedShulkerBlockEntity extends BlockEntity implements Conta
     @Override public void clearContent() { items().clear(); changed(); }
 
     @Override
-    public void startOpen(Player player) {
-        if (!player.isSpectator()) viewers++;
+    public void startOpen(ContainerUser user) {
+        viewers++;
     }
 
     @Override
-    public void stopOpen(Player player) {
-        if (!player.isSpectator()) viewers = Math.max(0, viewers - 1);
+    public void stopOpen(ContainerUser user) {
+        viewers = Math.max(0, viewers - 1);
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, LinkedShulkerBlockEntity be) {
         if (level.isClientSide()) return;
         int target = be.viewers > 0 ? LinkedShulkerBlock.MAX_OPEN_FRAME : 0;
         if (be.animationFrame == target) return;
-        if (++be.animationDelay < 1) return;
-        be.animationDelay = 0;
         be.animationFrame += be.animationFrame < target ? 1 : -1;
         if (state.hasProperty(LinkedShulkerBlock.OPEN_FRAME)) {
             level.setBlock(pos, state.setValue(LinkedShulkerBlock.OPEN_FRAME, be.animationFrame), 3);
         }
     }
 
-    // Important: this container points at shared channel storage. The vanilla
-    // BlockEntity removal hook would otherwise treat it like a normal local
-    // container and drop channel contents when any linked block is removed.
     @Override
     public void preRemoveSideEffects(BlockPos pos, BlockState state) {
-        // Intentionally empty: shared channel contents remain in SavedData.
+        // Shared channel storage must never be dropped from a single linked block.
     }
 
     @Override
