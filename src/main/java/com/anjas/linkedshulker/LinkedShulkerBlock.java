@@ -69,11 +69,9 @@ public final class LinkedShulkerBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        if (!state.is(newState.getBlock()) && level instanceof ServerLevel server) {
-            refreshChunkAnchorExcluding(server, pos);
-        }
-        super.onRemove(state, level, pos, newState, movedByPiston);
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
+        refreshChunkAnchorExcluding(level, pos);
+        super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
     }
 
     private static boolean hasAdjacentHopper(ServerLevel level, BlockPos pos) {
