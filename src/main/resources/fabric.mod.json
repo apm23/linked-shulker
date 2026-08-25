@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "linkedshulker",
+  "version": "${version}",
+  "name": "Linked Shulker",
+  "description": "Named-channel linked storage with hopper I/O and lightweight chunk anchoring.",
+  "authors": ["Anjas + OpenAI"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": { "main": ["com.anjas.linkedshulker.LinkedShulkerMod"] },
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~26.2",
+    "java": ">=25",
+    "fabric-api": ">=0.158.0+26.2"
+  }
+}
